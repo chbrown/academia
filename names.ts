@@ -1,4 +1,4 @@
-import {Name} from './types';
+import * as types from './types';
 
 /**
 1. Typical list of 3+
@@ -39,9 +39,9 @@ In other words, 'et al.' cannot stand in for a single author.
 
     authorsMatch(['Blei', 'et al.'], ['David M Blei', 'Andrew Y Ng', 'Michael I Jordan']) -> true
 */
-export function authorsMatch(citeAuthors: Name[], referenceAuthors: Name[]) {
+export function authorsMatch(citeAuthors: types.Name[], referenceAuthors: types.Name[]) {
   return citeAuthors.every((citeAuthor, i) => {
-    if (citeAuthor.last === referenceAuthors[i].last) {
+    if (referenceAuthors[i] && citeAuthor.last === referenceAuthors[i].last) {
       return true;
     }
     if (citeAuthor.last === 'et al.' && referenceAuthors.length > (i + 1)) {
@@ -61,7 +61,7 @@ parseAuthor('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach'
 parseAuthor('Zhou') -> { last: 'Zhou' }
 parseAuthor('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
 */
-export function parseName(input: string): Name {
+export function parseName(input: string): types.Name {
   // 0. 'et al.' is a special case
   if (input === 'et al.') {
     return {last: input};

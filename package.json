@@ -1,0 +1,22 @@
+{
+  "name": "academia",
+  "description": "Tools for analyzing academic text",
+  "keywords": [
+    "text",
+    "analytics",
+    "tools",
+    "academic",
+    "literature"
+  ],
+  "version": "0.1.0",
+  "homepage": "https://github.com/chbrown/academia",
+  "repository": "git://github.com/chbrown/academia.git",
+  "author": "Christopher Brown <io@henrian.com> (http://henrian.com)",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "typescript": "*"
+  }
+}

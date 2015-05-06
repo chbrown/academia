@@ -71,6 +71,7 @@ export function parseName(input: string): types.Name {
   // 2. split on whitespace
   var parts = input.split(/\s+/);
   var n = parts.length;
+  // 3. TODO: handle 'van', 'von', 'da', etc.
   if (n >= 3) {
     return {
       first: parts[0],

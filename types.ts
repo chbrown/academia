@@ -48,3 +48,28 @@ export interface Reference {
   publisher?: string;
   pages?: [number, number];
 }
+
+export interface Section {
+  /** 'title' could also be called 'header' */
+  title: string;
+  paragraphs: string[];
+}
+
+/**
+Paper: a representation of any kind of academic paper / conference
+presentation / manuscript. This preserves no formatting beyond sections /
+paragraph distinctions.
+
+`sections` is a flat list; abstracts / subsections / references all count at
+the same level.
+*/
+export interface Paper {
+  // metadata
+  title?: string;
+  authors?: Name[];
+  year?: number;
+  // content
+  sections: Section[];
+  // analysis
+  references?: Reference[];
+}

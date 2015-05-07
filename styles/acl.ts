@@ -11,7 +11,7 @@ export function stringifyNames(names: string[]): string {
   return parts.join(', ');
 }
 
-var name = '[A-Z][^()\\s]+';
+var name = '[A-Z][^()\\s]+(?: [IV]+)?';
 var year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
 
 var citeSources = [

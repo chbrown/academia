@@ -16,13 +16,13 @@ var year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
 
 var citeSources = [
   // et al., duo, and single, with year in parens
-  `${name} et al. \\(${year}\\)`,
-  `${name} (?:and|&) ${name} \\(${year}\\)`,
-  `${name} \\(${year}\\)`,
+  `${name}\\s+et\\s+al.\\s+\\(${year}\\)`,
+  `${name}\\s+(?:and|&)\\s+${name}\\s+\\(${year}\\)`,
+  `${name}\\s+\\(${year}\\)`,
   // et al., duo, and single, with year not in parens (note the commas)
-  `${name} et al., ${year}\\b`,
-  `${name} (?:and|&) ${name}, ${year}\\b`,
-  `${name}, ${year}\\b`,
+  `${name}\\s+et\\s+al.,\\s+${year}\\b`,
+  `${name}\\s+(?:and|&)\\s+${name},\\s+${year}\\b`,
+  `${name},\\s+${year}\\b`,
 ];
 export const citeRegExp = new RegExp(citeSources.join('|'), 'g');
 const yearRegExp = new RegExp(year);

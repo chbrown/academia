@@ -1,5 +1,5 @@
-import * as types from '../types';
-import * as names from '../names';
+import types = require('../types');
+import names = require('../names');
 
 export function stringifyNames(names: string[]): string {
   if (names.length < 3) {

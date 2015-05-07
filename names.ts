@@ -1,4 +1,4 @@
-import * as types from './types';
+import types = require('./types');
 
 /**
 1. Typical list of 3+

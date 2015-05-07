@@ -20,7 +20,7 @@ import types = require('./types');
 export function splitNames(input: string): string[] {
   // three split options: (, and ) or ( and ) or (, )
   // TODO: fix the 'et al.' hack
-  return input.replace(/\s+et al\./, ', et al.').split(/,\s*and\s+|\s*and\s+|,\s*/);
+  return input.replace(/\s+et al\./, ', et al.').split(/,\s*(?:and|&)\s+|\s*(?:and|&)\s+|,\s*/);
 }
 
 /**

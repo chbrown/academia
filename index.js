@@ -14,17 +14,17 @@ var academia;
                 return parts.join(', ');
             }
             acl.stringifyNames = stringifyNames;
-            var name = '[A-Z][^()\\s]+';
+            var name = '[A-Z][^()\\s]+(?: [IV]+)?';
             var year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
             var citeSources = [
                 // et al., duo, and single, with year in parens
-                (name + " et al. \\(" + year + "\\)"),
-                (name + " and " + name + " \\(" + year + "\\)"),
-                (name + " \\(" + year + "\\)"),
+                (name + "\\s+et\\s+al.\\s+\\(" + year + "\\)"),
+                (name + "\\s+(?:and|&)\\s+" + name + "\\s+\\(" + year + "\\)"),
+                (name + "\\s+\\(" + year + "\\)"),
                 // et al., duo, and single, with year not in parens (note the commas)
-                (name + " et al., " + year + "\\b"),
-                (name + " and " + name + ", " + year + "\\b"),
-                (name + ", " + year + "\\b"),
+                (name + "\\s+et\\s+al.,\\s+" + year + "\\b"),
+                (name + "\\s+(?:and|&)\\s+" + name + ",\\s+" + year + "\\b"),
+                (name + ",\\s+" + year + "\\b"),
             ];
             acl.citeRegExp = new RegExp(citeSources.join('|'), 'g');
             var yearRegExp = new RegExp(year);
@@ -107,7 +107,7 @@ var academia;
         function splitNames(input) {
             // three split options: (, and ) or ( and ) or (, )
             // TODO: fix the 'et al.' hack
-            return input.replace(/\s+et al\./, ', et al.').split(/,\s*and\s+|\s*and\s+|,\s*/);
+            return input.replace(/\s+et al\./, ', et al.').split(/,\s*(?:and|&)\s+|\s*(?:and|&)\s+|,\s*/);
         }
         names.splitNames = splitNames;
         /**

@@ -40,15 +40,19 @@ In other words, 'et al.' cannot stand in for a single author.
     authorsMatch(['Blei', 'et al.'], ['David M Blei', 'Andrew Y Ng', 'Michael I Jordan']) -> true
 */
 export function authorsMatch(citeAuthors: types.Name[], referenceAuthors: types.Name[]) {
-  return citeAuthors.every((citeAuthor, i) => {
-    if (referenceAuthors[i] && citeAuthor.last === referenceAuthors[i].last) {
+  for (var i = 0, l = Math.max(citeAuthors.length, referenceAuthors.length); i < l; i++) {
+    var citeAuthor = citeAuthors[i];
+    var referenceAuthor = referenceAuthors[i];
+    // the et al. handling has to precede the normal name-checking conditional below
+    if (citeAuthor && citeAuthor.last === 'et al.' && referenceAuthors.length > (i + 1)) {
+      // early exit: ignore the rest of the reference authors
       return true;
     }
-    if (citeAuthor.last === 'et al.' && referenceAuthors.length > (i + 1)) {
-      return true;
+    if (citeAuthor === undefined || referenceAuthor === undefined || citeAuthor.last !== referenceAuthor.last) {
+      return false;
     }
-    return false;
-  });
+  }
+  return true;
 }
 
 /**

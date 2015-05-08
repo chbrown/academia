@@ -16,9 +16,21 @@ import types = require('./types');
 5. Et al. abbreviation
   'Zhao et al.' ->
     ['Zhao', 'et al.']
+
+TODO: autodetect last-name-first swaps, e.g.,
+  'Levy, R., & Daumé III, H.' -> 'R. Levy, H. Daumé III' -> ['R. Levy', 'H. Daumé III']
+Or:
+  'Liu, F., Tian, F., & Zhu, Q.' -> 'F. Liu, F. Tian, & Q. Zhu' -> ['F. Liu', 'F. Tian', 'Q. Zhu']
+Technically, this is ambiguous, since we could support lists of only last names
+(e.g., 'Liu, Tian'; is this ['Tian Liu'] or ['Liu', 'Tian']?), but heuristics are better than nothing.
 */
 export function splitNames(input: string): string[] {
-  // three split options: (, and ) or ( and ) or (, )
+  // five split options:
+  // 1a. ", and "
+  // 1b. ", & "
+  // 2a. " and "
+  // 2b. " & "
+  // 3.  ", "
   // TODO: fix the 'et al.' hack
   return input.replace(/\s+et al\./, ', et al.').split(/,\s*(?:and|&)\s+|\s*(?:and|&)\s+|,\s*/);
 }

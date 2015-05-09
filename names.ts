@@ -15,7 +15,7 @@ import types = require('./types');
     ['David Sankofl']
 5. Et al. abbreviation
   'Zhao et al.' ->
-    ['Zhao', 'et al.']
+    ['Zhao', 'al.']
 
 TODO: autodetect last-name-first swaps, e.g.,
   'Levy, R., & Daumé III, H.' -> 'R. Levy, H. Daumé III' -> ['R. Levy', 'H. Daumé III']
@@ -31,8 +31,7 @@ export function splitNames(input: string): string[] {
   // 2a. " and "
   // 2b. " & "
   // 3.  ", "
-  // TODO: fix the 'et al.' hack
-  return input.replace(/\s+et al\./, ', et al.').split(/,\s*(?:and|&)\s+|\s*(?:and|&)\s+|,\s*/);
+  return input.split(/,?\s*\b(?:and|et|&)\b\s+|,\s*/);
 }
 
 /**
@@ -56,7 +55,7 @@ export function authorsMatch(citeAuthors: types.Name[], referenceAuthors: types.
     var citeAuthor = citeAuthors[i];
     var referenceAuthor = referenceAuthors[i];
     // the et al. handling has to precede the normal name-checking conditional below
-    if (citeAuthor && citeAuthor.last === 'et al.' && referenceAuthors.length > (i + 1)) {
+    if (citeAuthor && citeAuthor.last === 'al.' && referenceAuthors.length > (i + 1)) {
       // early exit: ignore the rest of the reference authors
       return true;
     }
@@ -78,10 +77,6 @@ parseAuthor('Zhou') -> { last: 'Zhou' }
 parseAuthor('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
 */
 export function parseName(input: string): types.Name {
-  // 0. 'et al.' is a special case
-  if (input === 'et al.') {
-    return {last: input};
-  }
   // 1. normalize the comma out
   input = input.split(/,\s*/).reverse().join(' ');
   // 2. split on whitespace

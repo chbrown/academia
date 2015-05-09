@@ -20,7 +20,7 @@ export interface Cite {
 }
 
 export interface AuthorYearCite extends Cite {
-  /** usually only last names, one of which may be 'et al.' */
+  /** usually only last names, one of which may be 'al.' (from 'et al.') */
   authors: Name[];
   /** not necessarily a number, if there is a letter suffix */
   year: string;

@@ -11,8 +11,8 @@ export function stringifyNames(names: string[]): string {
   return parts.join(', ');
 }
 
-var name = '[A-Z][^()\\s]+(?: [IV]+)?';
-var year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
+const name = '[A-Z][^()\\s]+(?: [IV]+)?';
+const year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
 
 var citeSources = [
   // et al., duo, and single, with year in parens
@@ -24,8 +24,9 @@ var citeSources = [
   `${name}\\s+(?:and|&)\\s+${name},\\s+${year}\\b`,
   `${name},\\s+${year}\\b`,
 ];
+
 export const citeRegExp = new RegExp(citeSources.join('|'), 'g');
-const yearRegExp = new RegExp(year);
+export const yearRegExp = new RegExp(year);
 const citeCleanRegExp = new RegExp(`[(),]|${year}`, 'g');
 
 /**

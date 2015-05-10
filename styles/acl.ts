@@ -42,7 +42,7 @@ export function parseCites(body: string): types.AuthorYearCite[] {
     // and years (with optional suffixes), and trimming any extra whitespace
     var names_string = cite.replace(citeCleanRegExp, '').trim();
     return {
-      authors: names.splitNames(names_string).map(names.parseName),
+      authors: names.parseNames(names_string),
       year: year_match ? year_match[0] : null,
       style: types.CiteStyle.Textual,
     };
@@ -58,7 +58,7 @@ parse each one into a Reference structure.
 export function parseReferences(references: string[]): types.Reference[] {
   return references.map(reference => {
     var match = reference.match(referenceRegExp);
-    var authors = match ? names.splitNames(match[1]).map(names.parseName) : [];
+    var authors = match ? names.parseNames(match[1]) : [];
     return {
       authors: authors,
       year: match ? match[2] : undefined,

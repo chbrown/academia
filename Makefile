@@ -22,3 +22,7 @@ type_declarations/DefinitelyTyped/%:
 
 node_modules/.bin/tsc node_modules/.bin/mocha node_modules/.bin/tsc-declare:
 	npm install
+
+.PHONY: test
+test: | node_modules/.bin/mocha
+	node_modules/.bin/mocha test/

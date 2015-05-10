@@ -1,4 +1,49 @@
+/// <reference path="./type_declarations/index.d.ts" />
+import lexing = require('lexing');
+var Token = lexing.Token;
+
 import types = require('./types');
+
+/**
+Given a name represented by a single string, parse it into first name, middle
+name, and last name.
+
+makeName('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
+makeName('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
+makeName('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
+makeName('Zhou') -> { last: 'Zhou' }
+makeName('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
+
+TODO: handle 'van', 'von', 'da', etc.
+*/
+function makeName(parts: string[]): types.Name {
+  var n = parts.length;
+  if (n >= 3) {
+    return {
+      first: parts[0],
+      middle: parts.slice(1, n - 1).join(' '),
+      last: parts[n - 1],
+    };
+  }
+  else if (n == 2) {
+    return {
+      first: parts[0],
+      last: parts[1],
+    };
+  }
+  return {
+    last: parts[0]
+  };
+}
+
+var default_rules: lexing.RegexRule<string>[] = [
+  [/^$/, match => Token('EOF') ],
+  [/^\s+/, match => null ],
+  [/^,\s+/, match => Token('SEPARATOR', match[0]) ],
+  [/^(and|et|&)/, match => Token('CONJUNCTION', match[0]) ],
+  [/^[A-Z](\.|\b)/, match => Token('INITIAL', match[0]) ],
+  [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+)?/i, match => Token('NAME', match[0]) ],
+];
 
 /**
 1. Typical list of 3+
@@ -17,21 +62,80 @@ import types = require('./types');
   'Zhao et al.' ->
     ['Zhao', 'al.']
 
-TODO: autodetect last-name-first swaps, e.g.,
+TODO: handle last-name-first swaps, e.g.,
   'Levy, R., & Daumé III, H.' -> 'R. Levy, H. Daumé III' -> ['R. Levy', 'H. Daumé III']
 Or:
   'Liu, F., Tian, F., & Zhu, Q.' -> 'F. Liu, F. Tian, & Q. Zhu' -> ['F. Liu', 'F. Tian', 'Q. Zhu']
 Technically, this is ambiguous, since we could support lists of only last names
 (e.g., 'Liu, Tian'; is this ['Tian Liu'] or ['Liu', 'Tian']?), but heuristics are better than nothing.
+
+Example chunks:
+
+[FIRST MIDDLE LAST] SEP
+[FIRST LAST] SEP
+[LAST SEP FIRST] SEP
+[LAST SEP INITIAL] [LAST2 SEP INITIAL2]
+
 */
-export function splitNames(input: string): string[] {
-  // five split options:
-  // 1a. ", and "
-  // 1b. ", & "
-  // 2a. " and "
-  // 2b. " & "
-  // 3.  ", "
-  return input.split(/,?\s*\b(?:and|et|&)\b\s+|,\s*/);
+export function parseNames(input: string): types.Name[] {
+  var input_iterable = new lexing.StringIterator(input);
+
+  var tokenizer = new lexing.Tokenizer(default_rules);
+  var token_iterator = tokenizer.map(input_iterable);
+
+  var names: types.Name[] = [];
+
+  var buffer: string[] = [];
+  var buffer_swap = false;
+  function flush() {
+    if (buffer_swap) {
+      // move the first item to the last item
+      buffer.push(buffer.shift());
+    }
+    var name = makeName(buffer);
+    names.push(name);
+    // reset
+    buffer = [];
+    buffer_swap = false;
+  }
+
+  while (1) {
+    var token = token_iterator.next();
+
+    // tokens: EOF NAME INITIAL SEPARATOR CONJUNCTION
+    if (token.name === 'EOF') {
+      break;
+    }
+    else if (token.name === 'NAME') {
+      // the first long name after
+      if (buffer.length > 0 && buffer_swap) {
+        flush();
+      }
+      buffer.push(token.value);
+    }
+    else if (token.name === 'INITIAL') {
+      // console.log('INITIAL=%s', token.value);
+      buffer.push(token.value);
+    }
+    else if (token.name === 'SEPARATOR' || token.name === 'CONJUNCTION') {
+      if (buffer.length === 1) {
+        buffer_swap = true;
+      }
+      else if (buffer.length > 1) {
+        flush();
+      }
+      else {
+        // a second separator without anything to separate
+      }
+    }
+  }
+
+  // finish up
+  if (buffer.length > 0) {
+    flush();
+  }
+
+  return names;
 }
 
 /**
@@ -64,39 +168,4 @@ export function authorsMatch(citeAuthors: types.Name[], referenceAuthors: types.
     }
   }
   return true;
-}
-
-/**
-Given a name represented by a single string, parse it into first name, middle
-name, and last name.
-
-parseAuthor('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
-parseAuthor('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
-parseAuthor('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
-parseAuthor('Zhou') -> { last: 'Zhou' }
-parseAuthor('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
-*/
-export function parseName(input: string): types.Name {
-  // 1. normalize the comma out
-  input = input.split(/,\s*/).reverse().join(' ');
-  // 2. split on whitespace
-  var parts = input.split(/\s+/);
-  var n = parts.length;
-  // 3. TODO: handle 'van', 'von', 'da', etc.
-  if (n >= 3) {
-    return {
-      first: parts[0],
-      middle: parts.slice(1, n - 1).join(' '),
-      last: parts[n - 1],
-    };
-  }
-  else if (n == 2) {
-    return {
-      first: parts[0],
-      last: parts[1],
-    };
-  }
-  return {
-    last: parts[0]
-  };
 }

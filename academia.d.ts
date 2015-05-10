@@ -3,10 +3,12 @@ declare module "academia" {
         module acl {
             function stringifyNames(names: string[]): string;
             const citeRegExp: RegExp;
+            const yearRegExp: RegExp;
             /**
             Given the text of a paper, extract the `Cite`s using regular expressions.
             */
             function parseCites(body: string): types.AuthorYearCite[];
+            const referenceRegExp: RegExp;
             /**
             Given a list of strings representing individual references in a bibliography,
             parse each one into a Reference structure.
@@ -15,7 +17,7 @@ declare module "academia" {
             /**
             In-place modifies `cites` by setting the `reference` value of each one where
             a unique match from `references` is found.
-            
+
             TODO: handle multiple matches somehow.
             */
             function linkCites(cites: types.AuthorYearCite[], references: types.Reference[]): void;
@@ -37,37 +39,41 @@ declare module "academia" {
             ['David Sankofl']
         5. Et al. abbreviation
           'Zhao et al.' ->
-            ['Zhao', 'et al.']
+            ['Zhao', 'al.']
+
+        TODO: handle last-name-first swaps, e.g.,
+          'Levy, R., & Daumé III, H.' -> 'R. Levy, H. Daumé III' -> ['R. Levy', 'H. Daumé III']
+        Or:
+          'Liu, F., Tian, F., & Zhu, Q.' -> 'F. Liu, F. Tian, & Q. Zhu' -> ['F. Liu', 'F. Tian', 'Q. Zhu']
+        Technically, this is ambiguous, since we could support lists of only last names
+        (e.g., 'Liu, Tian'; is this ['Tian Liu'] or ['Liu', 'Tian']?), but heuristics are better than nothing.
+
+        Example chunks:
+
+        [FIRST MIDDLE LAST] SEP
+        [FIRST LAST] SEP
+        [LAST SEP FIRST] SEP
+        [LAST SEP INITIAL] [LAST2 SEP INITIAL2]
+
         */
-        function splitNames(input: string): string[];
+        function parseNames(input: string): types.Name[];
         /**
         Typically, in-paper citations (`Cite`s) only have the last names of the authors,
         while the `Reference`s in the Bibliography have full names, or at least first
         initials and last names.
-        
+
         This method determines whether a `Cite`'s names match a `Reference`'s authors.
-        
+
             authorsMatch(['Joshi'], ['Aravind K Joshi']) -> true
             authorsMatch(['Diab', 'Kamboj'], ['Mona Diab', 'Ankit Kamboj']) -> true
-        
+
         'et al.' gets special treatment. 'et al.' is a match if and only if there are
         more reference authors beyond the one parallel to the 'et al.' citation author.
         In other words, 'et al.' cannot stand in for a single author.
-        
+
             authorsMatch(['Blei', 'et al.'], ['David M Blei', 'Andrew Y Ng', 'Michael I Jordan']) -> true
         */
         function authorsMatch(citeAuthors: types.Name[], referenceAuthors: types.Name[]): boolean;
-        /**
-        Given a name represented by a single string, parse it into first name, middle
-        name, and last name.
-        
-        parseAuthor('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
-        parseAuthor('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
-        parseAuthor('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
-        parseAuthor('Zhou') -> { last: 'Zhou' }
-        parseAuthor('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
-        */
-        function parseName(input: string): types.Name;
     }
     module types {
         /**
@@ -92,7 +98,7 @@ declare module "academia" {
             reference?: Reference;
         }
         interface AuthorYearCite extends Cite {
-            /** usually only last names, one of which may be 'et al.' */
+            /** usually only last names, one of which may be 'al.' (from 'et al.') */
             authors: Name[];
             /** not necessarily a number, if there is a letter suffix */
             year: string;
@@ -127,7 +133,7 @@ declare module "academia" {
         Paper: a representation of any kind of academic paper / conference
         presentation / manuscript. This preserves no formatting beyond sections /
         paragraph distinctions.
-        
+
         `sections` is a flat list; abstracts / subsections / references all count at
         the same level.
         */

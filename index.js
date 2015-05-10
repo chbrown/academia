@@ -1,3 +1,5 @@
+/// <reference path="./type_declarations/index.d.ts" />
+var lexing = require('lexing');
 var academia;
 (function (academia) {
     var styles;
@@ -27,7 +29,7 @@ var academia;
                 (name + ",\\s+" + year + "\\b"),
             ];
             acl.citeRegExp = new RegExp(citeSources.join('|'), 'g');
-            var yearRegExp = new RegExp(year);
+            acl.yearRegExp = new RegExp(year);
             var citeCleanRegExp = new RegExp("[(),]|" + year, 'g');
             /**
             Given the text of a paper, extract the `Cite`s using regular expressions.
@@ -37,27 +39,27 @@ var academia;
                 // flag set, the result will ignore any capture groups and return an Array of
                 // strings, or null if the RegExp matched nothing.
                 return (body.match(acl.citeRegExp) || []).map(function (cite) {
-                    var year_match = cite.match(yearRegExp);
+                    var year_match = cite.match(acl.yearRegExp);
                     // we cull it down to just the names by removing parentheses, commas,
                     // and years (with optional suffixes), and trimming any extra whitespace
                     var names_string = cite.replace(citeCleanRegExp, '').trim();
                     return {
-                        authors: names.splitNames(names_string).map(names.parseName),
+                        authors: names.parseNames(names_string),
                         year: year_match ? year_match[0] : null,
                         style: types.CiteStyle.Textual,
                     };
                 });
             }
             acl.parseCites = parseCites;
-            var referenceRegExp = new RegExp("^(.+?)\\.\\s*(" + year + ")\\.\\s*(.+?)\\.");
+            acl.referenceRegExp = new RegExp("^(.+?)[.,]\\s*\\(?(" + year + ")\\)?\\.\\s*(.+?)\\.");
             /**
             Given a list of strings representing individual references in a bibliography,
             parse each one into a Reference structure.
             */
             function parseReferences(references) {
                 return references.map(function (reference) {
-                    var match = reference.match(referenceRegExp);
-                    var authors = match ? names.splitNames(match[1]).map(names.parseName) : [];
+                    var match = reference.match(acl.referenceRegExp);
+                    var authors = match ? names.parseNames(match[1]) : [];
                     return {
                         authors: authors,
                         year: match ? match[2] : undefined,
@@ -86,7 +88,47 @@ var academia;
         })(acl = styles.acl || (styles.acl = {}));
     })(styles = academia.styles || (academia.styles = {}));
     var names;
-    (function (names) {
+    (function (names_1) {
+        var Token = lexing.Token;
+        /**
+        Given a name represented by a single string, parse it into first name, middle
+        name, and last name.
+        
+        makeName('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
+        makeName('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
+        makeName('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
+        makeName('Zhou') -> { last: 'Zhou' }
+        makeName('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
+        
+        TODO: handle 'van', 'von', 'da', etc.
+        */
+        function makeName(parts) {
+            var n = parts.length;
+            if (n >= 3) {
+                return {
+                    first: parts[0],
+                    middle: parts.slice(1, n - 1).join(' '),
+                    last: parts[n - 1],
+                };
+            }
+            else if (n == 2) {
+                return {
+                    first: parts[0],
+                    last: parts[1],
+                };
+            }
+            return {
+                last: parts[0]
+            };
+        }
+        var default_rules = [
+            [/^$/, function (match) { return Token('EOF'); }],
+            [/^\s+/, function (match) { return null; }],
+            [/^,\s+/, function (match) { return Token('SEPARATOR', match[0]); }],
+            [/^(and|et|&)/, function (match) { return Token('CONJUNCTION', match[0]); }],
+            [/^[A-Z](\.|\b)/, function (match) { return Token('INITIAL', match[0]); }],
+            [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+)?/i, function (match) { return Token('NAME', match[0]); }],
+        ];
         /**
         1. Typical list of 3+
           'David Mimno, Hanna M Wallach, and Andrew McCallum' ->
@@ -102,14 +144,76 @@ var academia;
             ['David Sankofl']
         5. Et al. abbreviation
           'Zhao et al.' ->
-            ['Zhao', 'et al.']
+            ['Zhao', 'al.']
+        
+        TODO: handle last-name-first swaps, e.g.,
+          'Levy, R., & Daumé III, H.' -> 'R. Levy, H. Daumé III' -> ['R. Levy', 'H. Daumé III']
+        Or:
+          'Liu, F., Tian, F., & Zhu, Q.' -> 'F. Liu, F. Tian, & Q. Zhu' -> ['F. Liu', 'F. Tian', 'Q. Zhu']
+        Technically, this is ambiguous, since we could support lists of only last names
+        (e.g., 'Liu, Tian'; is this ['Tian Liu'] or ['Liu', 'Tian']?), but heuristics are better than nothing.
+        
+        Example chunks:
+        
+        [FIRST MIDDLE LAST] SEP
+        [FIRST LAST] SEP
+        [LAST SEP FIRST] SEP
+        [LAST SEP INITIAL] [LAST2 SEP INITIAL2]
+        
         */
-        function splitNames(input) {
-            // three split options: (, and ) or ( and ) or (, )
-            // TODO: fix the 'et al.' hack
-            return input.replace(/\s+et al\./, ', et al.').split(/,\s*(?:and|&)\s+|\s*(?:and|&)\s+|,\s*/);
+        function parseNames(input) {
+            var input_iterable = new lexing.StringIterator(input);
+            var tokenizer = new lexing.Tokenizer(default_rules);
+            var token_iterator = tokenizer.map(input_iterable);
+            var names = [];
+            var buffer = [];
+            var buffer_swap = false;
+            function flush() {
+                if (buffer_swap) {
+                    // move the first item to the last item
+                    buffer.push(buffer.shift());
+                }
+                var name = makeName(buffer);
+                names.push(name);
+                // reset
+                buffer = [];
+                buffer_swap = false;
+            }
+            while (1) {
+                var token = token_iterator.next();
+                // tokens: EOF NAME INITIAL SEPARATOR CONJUNCTION
+                if (token.name === 'EOF') {
+                    break;
+                }
+                else if (token.name === 'NAME') {
+                    // the first long name after
+                    if (buffer.length > 0 && buffer_swap) {
+                        flush();
+                    }
+                    buffer.push(token.value);
+                }
+                else if (token.name === 'INITIAL') {
+                    // console.log('INITIAL=%s', token.value);
+                    buffer.push(token.value);
+                }
+                else if (token.name === 'SEPARATOR' || token.name === 'CONJUNCTION') {
+                    if (buffer.length === 1) {
+                        buffer_swap = true;
+                    }
+                    else if (buffer.length > 1) {
+                        flush();
+                    }
+                    else {
+                    }
+                }
+            }
+            // finish up
+            if (buffer.length > 0) {
+                flush();
+            }
+            return names;
         }
-        names.splitNames = splitNames;
+        names_1.parseNames = parseNames;
         /**
         Typically, in-paper citations (`Cite`s) only have the last names of the authors,
         while the `Reference`s in the Bibliography have full names, or at least first
@@ -131,7 +235,7 @@ var academia;
                 var citeAuthor = citeAuthors[i];
                 var referenceAuthor = referenceAuthors[i];
                 // the et al. handling has to precede the normal name-checking conditional below
-                if (citeAuthor && citeAuthor.last === 'et al.' && referenceAuthors.length > (i + 1)) {
+                if (citeAuthor && citeAuthor.last === 'al.' && referenceAuthors.length > (i + 1)) {
                     // early exit: ignore the rest of the reference authors
                     return true;
                 }
@@ -141,46 +245,7 @@ var academia;
             }
             return true;
         }
-        names.authorsMatch = authorsMatch;
-        /**
-        Given a name represented by a single string, parse it into first name, middle
-        name, and last name.
-        
-        parseAuthor('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
-        parseAuthor('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
-        parseAuthor('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
-        parseAuthor('Zhou') -> { last: 'Zhou' }
-        parseAuthor('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
-        */
-        function parseName(input) {
-            // 0. 'et al.' is a special case
-            if (input === 'et al.') {
-                return { last: input };
-            }
-            // 1. normalize the comma out
-            input = input.split(/,\s*/).reverse().join(' ');
-            // 2. split on whitespace
-            var parts = input.split(/\s+/);
-            var n = parts.length;
-            // 3. TODO: handle 'van', 'von', 'da', etc.
-            if (n >= 3) {
-                return {
-                    first: parts[0],
-                    middle: parts.slice(1, n - 1).join(' '),
-                    last: parts[n - 1],
-                };
-            }
-            else if (n == 2) {
-                return {
-                    first: parts[0],
-                    last: parts[1],
-                };
-            }
-            return {
-                last: parts[0]
-            };
-        }
-        names.parseName = parseName;
+        names_1.authorsMatch = authorsMatch;
     })(names = academia.names || (academia.names = {}));
     var types;
     (function (types) {

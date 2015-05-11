@@ -41,7 +41,7 @@ var default_rules: lexing.RegexRule<string>[] = [
   [/^\s+/, match => null ],
   [/^,\s+/, match => Token('SEPARATOR', match[0]) ],
   [/^(and|et|&)/, match => Token('CONJUNCTION', match[0]) ],
-  [/^[A-Z](\.|\b)/, match => Token('INITIAL', match[0]) ],
+  [/^[A-Z](\.|\s)/, match => Token('INITIAL', match[0].trim()) ],
   [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+)?/i, match => Token('NAME', match[0]) ],
 ];
 
@@ -101,6 +101,7 @@ export function parseNames(input: string): types.Name[] {
 
   while (1) {
     var token = token_iterator.next();
+    // console.error('%s=%s', token.name, token.value);
 
     // tokens: EOF NAME INITIAL SEPARATOR CONJUNCTION
     if (token.name === 'EOF') {

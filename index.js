@@ -126,8 +126,8 @@ var academia;
             [/^\s+/, function (match) { return null; }],
             [/^,\s+/, function (match) { return Token('SEPARATOR', match[0]); }],
             [/^(and|et|&)/, function (match) { return Token('CONJUNCTION', match[0]); }],
-            [/^[A-Z](\.|\b)/, function (match) { return Token('INITIAL', match[0]); }],
-            [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+)?/i, function (match) { return Token('NAME', match[0]); }],
+            [/^[A-Z](\.|\s)/, function (match) { return Token('INITIAL', match[0].trim()); }],
+            [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+\b)?/i, function (match) { return Token('NAME', match[0]); }],
         ];
         /**
         1. Typical list of 3+
@@ -181,6 +181,7 @@ var academia;
             }
             while (1) {
                 var token = token_iterator.next();
+                // console.error('%s=%s', token.name, token.value);
                 // tokens: EOF NAME INITIAL SEPARATOR CONJUNCTION
                 if (token.name === 'EOF') {
                     break;

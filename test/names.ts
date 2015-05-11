@@ -34,6 +34,13 @@ describe('Test names.splitNames:', () => {
       {last: 'Zhao'},
       {last: 'al.'},
     ]);
+    testParse('Yusuke Miyao, Rune Sætre, Kenji Sagae, Takuya Matsuzaki, and Jun’ichi Tsujii', [
+      {first: 'Yusuke', last: 'Miyao'},
+      {first: 'Rune', last: 'Sætre'},
+      {first: 'Kenji', last: 'Sagae'},
+      {first: 'Takuya', last: 'Matsuzaki'},
+      {first: 'Jun’ichi', last: 'Tsujii'},
+    ]);
   });
 
   describe('Swapped names:', () => {

@@ -42,7 +42,7 @@ var default_rules: lexing.RegexRule<string>[] = [
   [/^,\s+/, match => Token('SEPARATOR', match[0]) ],
   [/^(and|et|&)/, match => Token('CONJUNCTION', match[0]) ],
   [/^[A-Z](\.|\s)/, match => Token('INITIAL', match[0].trim()) ],
-  [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+)?/i, match => Token('NAME', match[0]) ],
+  [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+\b)?/i, match => Token('NAME', match[0]) ],
 ];
 
 /**

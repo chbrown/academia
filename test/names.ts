@@ -41,6 +41,10 @@ describe('Test names.splitNames:', () => {
       {first: 'Takuya', last: 'Matsuzaki'},
       {first: 'Jun’ichi', last: 'Tsujii'},
     ]);
+    testParse('Weiwei Sun and Jia Xu', [
+      {first: 'Weiwei', last: 'Sun'},
+      {first: 'Jia', last: 'Xu'},
+    ]);
   });
 
   describe('Swapped names:', () => {

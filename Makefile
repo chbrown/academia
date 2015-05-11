@@ -14,6 +14,9 @@ clean:
 
 DTS := mocha/mocha node/node
 
+%.js: %.ts type_declarations | node_modules/.bin/tsc
+	node_modules/.bin/tsc -m commonjs -t ES5 $<
+
 type_declarations: $(DTS:%=type_declarations/DefinitelyTyped/%.d.ts)
 
 type_declarations/DefinitelyTyped/%:
@@ -24,5 +27,5 @@ node_modules/.bin/tsc node_modules/.bin/mocha node_modules/.bin/tsc-declare:
 	npm install
 
 .PHONY: test
-test: | node_modules/.bin/mocha
+test: test/names.js | node_modules/.bin/mocha
 	node_modules/.bin/mocha test/

@@ -43,6 +43,8 @@ var default_rules: lexing.RegexRule<string>[] = [
   [/^(and|et|&)/, match => Token('CONJUNCTION', match[0]) ],
   [/^[A-Z](\.|\s)/, match => Token('INITIAL', match[0].trim()) ],
   [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+\b)?/i, match => Token('NAME', match[0]) ],
+  // pretty much a catch-all:
+  [/^[^,\s]+/i, match => Token('NAME', match[0]) ],
 ];
 
 /**

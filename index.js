@@ -51,7 +51,7 @@ var academia;
                 });
             }
             acl.parseCites = parseCites;
-            acl.referenceRegExp = new RegExp("^(.+?)[.,]\\s*\\(?(" + year + ")\\)?\\.\\s*(.+?)\\.");
+            acl.referenceRegExp = new RegExp("^(.+?)[.,]?\\s*\\(?(" + year + ")\\)?\\.\\s*(.+?)\\.");
             /**
             Given a list of strings representing individual references in a bibliography,
             parse each one into a Reference structure.
@@ -128,6 +128,8 @@ var academia;
             [/^(and|et|&)/, function (match) { return Token('CONJUNCTION', match[0]); }],
             [/^[A-Z](\.|\s)/, function (match) { return Token('INITIAL', match[0].trim()); }],
             [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+\b)?/i, function (match) { return Token('NAME', match[0]); }],
+            // pretty much a catch-all:
+            [/^[^,\s]+/i, function (match) { return Token('NAME', match[0]); }],
         ];
         /**
         1. Typical list of 3+

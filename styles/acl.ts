@@ -49,7 +49,7 @@ export function parseCites(body: string): types.AuthorYearCite[] {
   });
 }
 
-export const referenceRegExp = new RegExp(`^(.+?)[.,]\\s*\\(?(${year})\\)?\\.\\s*(.+?)\\.`);
+export const referenceRegExp = new RegExp(`^(.+?)[.,]?\\s*\\(?(${year})\\)?\\.\\s*(.+?)\\.`);
 
 /**
 Given a list of strings representing individual references in a bibliography,

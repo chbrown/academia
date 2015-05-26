@@ -14,14 +14,19 @@
   "author": "Christopher Brown <io@henrian.com> (http://henrian.com)",
   "license": "MIT",
   "dependencies": {
-    "lexing": "*"
+    "chalk": "*",
+    "lexing": "*",
+    "yargs": "*"
   },
   "devDependencies": {
     "mocha": "*",
-    "typescript-declare": "*",
-    "typescript": "*"
+    "typescript": "*",
+    "typescript-declare": "*"
   },
   "scripts": {
     "test": "make test"
+  },
+  "bin": {
+    "academia": "bin/academia"
   }
 }

@@ -10,10 +10,10 @@ declare module "academia" {
             function parseCites(body: string): types.AuthorYearCite[];
             const referenceRegExp: RegExp;
             /**
-            Given a list of strings representing individual references in a bibliography,
-            parse each one into a Reference structure.
+            Given a string representing an individual reference in a bibliography, parse
+            it into a Reference structure.
             */
-            function parseReferences(references: string[]): types.Reference[];
+            function parseReference(reference: string): types.Reference;
             /**
             In-place modifies `cites` by setting the `reference` value of each one where
             a unique match from `references` is found.
@@ -143,6 +143,7 @@ declare module "academia" {
             year?: number;
             sections: Section[];
             references?: Reference[];
+            cites?: Cite[];
         }
     }
 }

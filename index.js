@@ -53,21 +53,19 @@ var academia;
             acl.parseCites = parseCites;
             acl.referenceRegExp = new RegExp("^(.+?)[.,]?\\s*\\(?(" + year + ")\\)?\\.\\s*(.+?)\\.");
             /**
-            Given a list of strings representing individual references in a bibliography,
-            parse each one into a Reference structure.
+            Given a string representing an individual reference in a bibliography, parse
+            it into a Reference structure.
             */
-            function parseReferences(references) {
-                return references.map(function (reference) {
-                    var match = reference.match(acl.referenceRegExp);
-                    var authors = match ? names.parseNames(match[1]) : [];
-                    return {
-                        authors: authors,
-                        year: match ? match[2] : undefined,
-                        title: match ? match[3] : undefined,
-                    };
-                });
+            function parseReference(reference) {
+                var match = reference.match(acl.referenceRegExp);
+                var authors = match ? names.parseNames(match[1]) : [];
+                return {
+                    authors: authors,
+                    year: match ? match[2] : undefined,
+                    title: match ? match[3] : undefined,
+                };
             }
-            acl.parseReferences = parseReferences;
+            acl.parseReference = parseReference;
             /**
             In-place modifies `cites` by setting the `reference` value of each one where
             a unique match from `references` is found.

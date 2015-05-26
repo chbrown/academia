@@ -10,9 +10,9 @@ index.js academia.d.ts: $(SOURCES) type_declarations | node_modules/.bin/tsc-dec
 clean:
 	rm -f $(SOURCES:%.ts=%.js) $(SOURCES:%.ts=%.d.ts)
 
-# for testing:
+# for testing / command line usage:
 
-DTS := mocha/mocha node/node
+DTS := chalk/chalk mocha/mocha node/node yargs/yargs
 
 %.js: %.ts type_declarations | node_modules/.bin/tsc
 	node_modules/.bin/tsc -m commonjs -t ES5 $<

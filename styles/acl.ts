@@ -52,19 +52,17 @@ export function parseCites(body: string): types.AuthorYearCite[] {
 export const referenceRegExp = new RegExp(`^(.+?)[.,]?\\s*\\(?(${year})\\)?\\.\\s*(.+?)\\.`);
 
 /**
-Given a list of strings representing individual references in a bibliography,
-parse each one into a Reference structure.
+Given a string representing an individual reference in a bibliography, parse
+it into a Reference structure.
 */
-export function parseReferences(references: string[]): types.Reference[] {
-  return references.map(reference => {
-    var match = reference.match(referenceRegExp);
-    var authors = match ? names.parseNames(match[1]) : [];
-    return {
-      authors: authors,
-      year: match ? match[2] : undefined,
-      title: match ? match[3] : undefined,
-    };
-  });
+export function parseReference(reference: string): types.Reference {
+  var match = reference.match(referenceRegExp);
+  var authors = match ? names.parseNames(match[1]) : [];
+  return {
+    authors: authors,
+    year: match ? match[2] : undefined,
+    title: match ? match[3] : undefined,
+  };
 }
 
 /**

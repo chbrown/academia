@@ -72,4 +72,5 @@ export interface Paper {
   sections: Section[];
   // analysis
   references?: Reference[];
+  cites?: Cite[];
 }

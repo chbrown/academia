@@ -59,6 +59,7 @@ Extends `academia.Cite`, and adds the following fields:
       authors?: Name[],
       year?: number,
       references?: Reference[],
+      cites?: Cite[],
     }
 
 ## `academia.Section`

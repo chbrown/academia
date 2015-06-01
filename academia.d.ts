@@ -21,6 +21,14 @@ declare module "academia" {
             TODO: handle multiple matches somehow.
             */
             function linkCites(cites: types.AuthorYearCite[], references: types.Reference[]): void;
+            /**
+            Join the papers sections into a single string, for searching, and find all cites
+            in that string. Parse references, and link the cites to them heuristically.
+
+            Extend the given paper with the parsed references and cites (linked or not),
+            and return it.
+            */
+            function linkPaper(paper: types.Paper, referencesTitleRegExp?: RegExp): types.Paper;
         }
     }
     module names {

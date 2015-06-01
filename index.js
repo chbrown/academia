@@ -6,6 +6,9 @@ var academia;
     (function (styles) {
         var acl;
         (function (acl) {
+            function pushAll(array, items) {
+                return Array.prototype.push.apply(array, items);
+            }
             function stringifyNames(names) {
                 if (names.length < 3) {
                     return names.join(' and ');
@@ -83,6 +86,32 @@ var academia;
                 });
             }
             acl.linkCites = linkCites;
+            /**
+            Join the papers sections into a single string, for searching, and find all cites
+            in that string. Parse references, and link the cites to them heuristically.
+            
+            Extend the given paper with the parsed references and cites (linked or not),
+            and return it.
+            */
+            function linkPaper(paper, referencesTitleRegExp) {
+                if (referencesTitleRegExp === void 0) { referencesTitleRegExp = /References?/; }
+                var body = paper.sections
+                    .filter(function (section) { return !referencesTitleRegExp.test(section.title); })
+                    .map(function (section) { return ("# " + section.title + "\n" + section.paragraphs.join('\n')); })
+                    .join('\n');
+                paper.references = paper.sections
+                    .filter(function (section) { return referencesTitleRegExp.test(section.title); })
+                    .map(function (section) { return section.paragraphs.map(parseReference); })
+                    .reduce(function (accumulator, references) {
+                    pushAll(accumulator, references);
+                    return accumulator;
+                }, []);
+                var cites = parseCites(body);
+                linkCites(cites, paper.references);
+                paper.cites = cites;
+                return paper;
+            }
+            acl.linkPaper = linkPaper;
         })(acl = styles.acl || (styles.acl = {}));
     })(styles = academia.styles || (academia.styles = {}));
     var names;
@@ -122,7 +151,7 @@ var academia;
         var default_rules = [
             [/^$/, function (match) { return Token('EOF'); }],
             [/^\s+/, function (match) { return null; }],
-            [/^,\s+/, function (match) { return Token('SEPARATOR', match[0]); }],
+            [/^,/, function (match) { return Token('SEPARATOR', match[0]); }],
             [/^(and|et|&)/, function (match) { return Token('CONJUNCTION', match[0]); }],
             [/^[A-Z](\.|\s)/, function (match) { return Token('INITIAL', match[0].trim()); }],
             [/^((van|von|da|de)\s+)?[A-Z][^,\s]+(\s+[IVX]+\b)?/i, function (match) { return Token('NAME', match[0]); }],

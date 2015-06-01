@@ -1,6 +1,10 @@
 import types = require('../types');
 import names = require('../names');
 
+function pushAll<T>(array: T[], items: T[]): void {
+  return Array.prototype.push.apply(array, items);
+}
+
 export function stringifyNames(names: string[]): string {
   if (names.length < 3) {
     return names.join(' and ');
@@ -80,4 +84,29 @@ export function linkCites(cites: types.AuthorYearCite[], references: types.Refer
       cite.reference = matching_references[0];
     }
   });
+}
+
+/**
+Join the papers sections into a single string, for searching, and find all cites
+in that string. Parse references, and link the cites to them heuristically.
+
+Extend the given paper with the parsed references and cites (linked or not),
+and return it.
+*/
+export function linkPaper(paper: types.Paper, referencesTitleRegExp = /References?/) {
+  var body = paper.sections
+    .filter(section => !referencesTitleRegExp.test(section.title))
+    .map(section => `# ${section.title}\n${section.paragraphs.join('\n')}`)
+    .join('\n');
+  paper.references = paper.sections
+    .filter(section => referencesTitleRegExp.test(section.title))
+    .map(section => section.paragraphs.map(parseReference))
+    .reduce((accumulator, references) => {
+      pushAll(accumulator, references);
+      return accumulator;
+    }, []);
+  var cites = parseCites(body);
+  linkCites(cites, paper.references);
+  paper.cites = cites;
+  return paper;
 }

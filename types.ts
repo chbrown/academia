@@ -17,6 +17,8 @@ export interface Cite {
   range?: [number, number];
   /** the full reference it matches */
   reference?: Reference;
+  /** the original text */
+  source?: string;
 }
 
 export interface AuthorYearCite extends Cite {
@@ -47,6 +49,8 @@ export interface Reference {
   /** company name / conference */
   publisher?: string;
   pages?: [number, number];
+  /** the original text */
+  source?: string;
 }
 
 export interface Section {

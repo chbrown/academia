@@ -8,15 +8,15 @@ import types = require('./types');
 Given a name represented by a single string, parse it into first name, middle
 name, and last name.
 
-makeName('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
-makeName('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
-makeName('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
-makeName('Zhou') -> { last: 'Zhou' }
-makeName('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
+makeName(['Leonardo', 'da', 'Vinci']) -> { first: 'Leonardo', last: 'da Vinci' }
+makeName(['Chris', 'Callison-Burch']) -> { first: 'Chris', last: 'Callison-Burch' }
+makeName(['Hanna', 'M', 'Wallach']) -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
+makeName(['Zhou']) -> { last: 'Zhou' }
+makeName(['McCallum', 'Andrew']) -> { first: 'Andrew', last: 'McCallum' }
 
 TODO: handle 'van', 'von', 'da', etc.
 */
-function makeName(parts: string[]): types.Name {
+export function parseName(parts: string[]): types.Name {
   var n = parts.length;
   if (n >= 3) {
     return {
@@ -34,6 +34,23 @@ function makeName(parts: string[]): types.Name {
   return {
     last: parts[0]
   };
+}
+
+/**
+Opinionated name formatting.
+*/
+export function formatName(name: types.Name): string {
+  return [name.first, name.middle, name.last].filter(part => part !== null && part !== undefined).join(' ');
+}
+export function formatNames(names: types.Name[]): string {
+  var name_strings = names.map(formatName);
+  if (name_strings.length < 3) {
+    return name_strings.join(' and ');
+  }
+  // use the Oxford comma
+  var parts = name_strings.slice(0, -2); // might be []
+  parts.push(name_strings.slice(-2).join(', and '));
+  return parts.join(', ');
 }
 
 var default_rules: lexing.RegexRule<string>[] = [
@@ -94,7 +111,7 @@ export function parseNames(input: string): types.Name[] {
       // move the first item to the last item
       buffer.push(buffer.shift());
     }
-    var name = makeName(buffer);
+    var name = parseName(buffer);
     names.push(name);
     // reset
     buffer = [];

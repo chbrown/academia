@@ -5,16 +5,6 @@ function pushAll<T>(array: T[], items: T[]): void {
   return Array.prototype.push.apply(array, items);
 }
 
-export function stringifyNames(names: string[]): string {
-  if (names.length < 3) {
-    return names.join(' and ');
-  }
-  // use the Oxford comma
-  var parts = names.slice(0, -2); // might be []
-  parts.push(names.slice(-2).join(', and '));
-  return parts.join(', ');
-}
-
 const name = '[A-Z][^()\\s]+(?: [IV]+)?';
 const year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
 
@@ -40,7 +30,8 @@ export function parseCites(body: string): types.AuthorYearCite[] {
   // when String.prototype.match is called with a RegExp with the 'g' (global)
   // flag set, the result will ignore any capture groups and return an Array of
   // strings, or null if the RegExp matched nothing.
-  return (body.match(citeRegExp) || []).map(cite => {
+  var cites: string[] = body.match(citeRegExp) || [];
+  return cites.map(cite => {
     var year_match = cite.match(yearRegExp);
     // we cull it down to just the names by removing parentheses, commas,
     // and years (with optional suffixes), and trimming any extra whitespace
@@ -49,6 +40,7 @@ export function parseCites(body: string): types.AuthorYearCite[] {
       authors: names.parseNames(names_string),
       year: year_match ? year_match[0] : null,
       style: types.CiteStyle.Textual,
+      source: cite,
     };
   });
 }
@@ -66,7 +58,17 @@ export function parseReference(reference: string): types.Reference {
     authors: authors,
     year: match ? match[2] : undefined,
     title: match ? match[3] : undefined,
+    source: reference,
   };
+}
+
+/**
+Given a Reference, format it as a string.
+*/
+export function formatReference(reference: types.Reference): string {
+  var authors = names.formatNames(reference.authors)
+  var parts = [authors, reference.year, reference.title, reference.venue, reference.publisher, reference.pages];
+  return parts.filter(part => part !== undefined && part !== null).join('. ') + '.';
 }
 
 /**

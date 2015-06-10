@@ -1,7 +1,6 @@
 declare module "academia" {
     module styles {
         module acl {
-            function stringifyNames(names: string[]): string;
             const citeRegExp: RegExp;
             const yearRegExp: RegExp;
             /**
@@ -14,6 +13,10 @@ declare module "academia" {
             it into a Reference structure.
             */
             function parseReference(reference: string): types.Reference;
+            /**
+            Given a Reference, format it as a string.
+            */
+            function formatReference(reference: types.Reference): string;
             /**
             In-place modifies `cites` by setting the `reference` value of each one where
             a unique match from `references` is found.
@@ -32,6 +35,24 @@ declare module "academia" {
         }
     }
     module names {
+        /**
+        Given a name represented by a single string, parse it into first name, middle
+        name, and last name.
+
+        makeName(['Leonardo', 'da', 'Vinci']) -> { first: 'Leonardo', last: 'da Vinci' }
+        makeName(['Chris', 'Callison-Burch']) -> { first: 'Chris', last: 'Callison-Burch' }
+        makeName(['Hanna', 'M', 'Wallach']) -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
+        makeName(['Zhou']) -> { last: 'Zhou' }
+        makeName(['McCallum', 'Andrew']) -> { first: 'Andrew', last: 'McCallum' }
+
+        TODO: handle 'van', 'von', 'da', etc.
+        */
+        function parseName(parts: string[]): types.Name;
+        /**
+        Opinionated name formatting.
+        */
+        function formatName(name: types.Name): string;
+        function formatNames(names: types.Name[]): string;
         /**
         1. Typical list of 3+
           'David Mimno, Hanna M Wallach, and Andrew McCallum' ->
@@ -104,6 +125,8 @@ declare module "academia" {
             range?: [number, number];
             /** the full reference it matches */
             reference?: Reference;
+            /** the original text */
+            source?: string;
         }
         interface AuthorYearCite extends Cite {
             /** usually only last names, one of which may be 'al.' (from 'et al.') */
@@ -131,6 +154,8 @@ declare module "academia" {
             /** company name / conference */
             publisher?: string;
             pages?: [number, number];
+            /** the original text */
+            source?: string;
         }
         interface Section {
             /** 'title' could also be called 'header' */

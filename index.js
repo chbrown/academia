@@ -9,16 +9,6 @@ var academia;
             function pushAll(array, items) {
                 return Array.prototype.push.apply(array, items);
             }
-            function stringifyNames(names) {
-                if (names.length < 3) {
-                    return names.join(' and ');
-                }
-                // use the Oxford comma
-                var parts = names.slice(0, -2); // might be []
-                parts.push(names.slice(-2).join(', and '));
-                return parts.join(', ');
-            }
-            acl.stringifyNames = stringifyNames;
             var name = '[A-Z][^()\\s]+(?: [IV]+)?';
             var year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
             var citeSources = [
@@ -41,7 +31,8 @@ var academia;
                 // when String.prototype.match is called with a RegExp with the 'g' (global)
                 // flag set, the result will ignore any capture groups and return an Array of
                 // strings, or null if the RegExp matched nothing.
-                return (body.match(acl.citeRegExp) || []).map(function (cite) {
+                var cites = body.match(acl.citeRegExp) || [];
+                return cites.map(function (cite) {
                     var year_match = cite.match(acl.yearRegExp);
                     // we cull it down to just the names by removing parentheses, commas,
                     // and years (with optional suffixes), and trimming any extra whitespace
@@ -50,6 +41,7 @@ var academia;
                         authors: names.parseNames(names_string),
                         year: year_match ? year_match[0] : null,
                         style: types.CiteStyle.Textual,
+                        source: cite,
                     };
                 });
             }
@@ -66,9 +58,19 @@ var academia;
                     authors: authors,
                     year: match ? match[2] : undefined,
                     title: match ? match[3] : undefined,
+                    source: reference,
                 };
             }
             acl.parseReference = parseReference;
+            /**
+            Given a Reference, format it as a string.
+            */
+            function formatReference(reference) {
+                var authors = names.formatNames(reference.authors);
+                var parts = [authors, reference.year, reference.title, reference.venue, reference.publisher, reference.pages];
+                return parts.filter(function (part) { return part !== undefined && part !== null; }).join('. ') + '.';
+            }
+            acl.formatReference = formatReference;
             /**
             In-place modifies `cites` by setting the `reference` value of each one where
             a unique match from `references` is found.
@@ -121,15 +123,15 @@ var academia;
         Given a name represented by a single string, parse it into first name, middle
         name, and last name.
         
-        makeName('Leonardo da Vinci') -> { first: 'Leonardo', last: 'da Vinci' }
-        makeName('Chris Callison-Burch') -> { first: 'Chris', last: 'Callison-Burch' }
-        makeName('Hanna M Wallach') -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
-        makeName('Zhou') -> { last: 'Zhou' }
-        makeName('McCallum, Andrew') -> { first: 'Andrew', last: 'McCallum' }
+        makeName(['Leonardo', 'da', 'Vinci']) -> { first: 'Leonardo', last: 'da Vinci' }
+        makeName(['Chris', 'Callison-Burch']) -> { first: 'Chris', last: 'Callison-Burch' }
+        makeName(['Hanna', 'M', 'Wallach']) -> { first: 'Hanna', middle: 'M', last: 'Wallach' }
+        makeName(['Zhou']) -> { last: 'Zhou' }
+        makeName(['McCallum', 'Andrew']) -> { first: 'Andrew', last: 'McCallum' }
         
         TODO: handle 'van', 'von', 'da', etc.
         */
-        function makeName(parts) {
+        function parseName(parts) {
             var n = parts.length;
             if (n >= 3) {
                 return {
@@ -148,6 +150,25 @@ var academia;
                 last: parts[0]
             };
         }
+        names_1.parseName = parseName;
+        /**
+        Opinionated name formatting.
+        */
+        function formatName(name) {
+            return [name.first, name.middle, name.last].filter(function (part) { return part !== null && part !== undefined; }).join(' ');
+        }
+        names_1.formatName = formatName;
+        function formatNames(names) {
+            var name_strings = names.map(formatName);
+            if (name_strings.length < 3) {
+                return name_strings.join(' and ');
+            }
+            // use the Oxford comma
+            var parts = name_strings.slice(0, -2); // might be []
+            parts.push(name_strings.slice(-2).join(', and '));
+            return parts.join(', ');
+        }
+        names_1.formatNames = formatNames;
         var default_rules = [
             [/^$/, function (match) { return Token('EOF'); }],
             [/^\s+/, function (match) { return null; }],
@@ -202,7 +223,7 @@ var academia;
                     // move the first item to the last item
                     buffer.push(buffer.shift());
                 }
-                var name = makeName(buffer);
+                var name = parseName(buffer);
                 names.push(name);
                 // reset
                 buffer = [];

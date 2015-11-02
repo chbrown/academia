@@ -1,4 +1,3 @@
-/// <reference path="../type_declarations/index.d.ts" />
 import assert = require('assert');
 
 import types = require('../types');

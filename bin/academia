@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require('./academia.js').main();
+require('../').main();

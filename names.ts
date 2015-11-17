@@ -1,8 +1,5 @@
-/// <reference path="./type_declarations/index.d.ts" />
-import lexing = require('lexing');
-var Token = lexing.Token;
-
-import types = require('./types');
+import {StringIterator, RegexRule, Token, Tokenizer} from 'lexing';
+import * as types from './types';
 
 /**
 Given a name represented by a single string, parse it into first name, middle
@@ -53,7 +50,7 @@ export function formatNames(names: types.Name[]): string {
   return parts.join(', ');
 }
 
-var default_rules: lexing.RegexRule<string>[] = [
+var default_rules: RegexRule<string>[] = [
   [/^$/, match => Token('EOF') ],
   [/^\s+/, match => null ],
   [/^,/, match => Token('SEPARATOR', match[0]) ],
@@ -97,9 +94,9 @@ Example chunks:
 
 */
 export function parseNames(input: string): types.Name[] {
-  var input_iterable = new lexing.StringIterator(input);
+  var input_iterable = new StringIterator(input);
 
-  var tokenizer = new lexing.Tokenizer(default_rules);
+  var tokenizer = new Tokenizer(default_rules);
   var token_iterator = tokenizer.map(input_iterable);
 
   var names: types.Name[] = [];

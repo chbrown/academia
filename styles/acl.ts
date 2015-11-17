@@ -1,9 +1,5 @@
-import types = require('../types');
-import names = require('../names');
-
-function pushAll<T>(array: T[], items: T[]): void {
-  return Array.prototype.push.apply(array, items);
-}
+import * as types from '../types';
+import * as names from '../names';
 
 const name = '[A-Z][^()\\s]+(?: [IV]+)?';
 const year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
@@ -24,25 +20,20 @@ export const yearRegExp = new RegExp(year);
 const citeCleanRegExp = new RegExp(`[(),]|${year}`, 'g');
 
 /**
-Given the text of a paper, extract the `Cite`s using regular expressions.
+find the start indices and lengths of all non-overlapping substrings matching
+`regExp` in `input`.
 */
-export function parseCites(body: string): types.AuthorYearCite[] {
-  // when String.prototype.match is called with a RegExp with the 'g' (global)
-  // flag set, the result will ignore any capture groups and return an Array of
-  // strings, or null if the RegExp matched nothing.
-  var cites: string[] = body.match(citeRegExp) || [];
-  return cites.map(cite => {
-    var year_match = cite.match(yearRegExp);
-    // we cull it down to just the names by removing parentheses, commas,
-    // and years (with optional suffixes), and trimming any extra whitespace
-    var names_string = cite.replace(citeCleanRegExp, '').trim();
-    return {
-      authors: names.parseNames(names_string),
-      year: year_match ? year_match[0] : null,
-      style: types.CiteStyle.Textual,
-      source: cite,
-    };
-  });
+function matchSpans(input: string, regExp: RegExp = citeRegExp): Array<[number, number]> {
+  // reset the regex
+  regExp.lastIndex = 0;
+  // set up the iteration variables
+  var previousLastIndex = regExp.lastIndex;
+  var spans: Array<[number, number]> = [];
+  var match: RegExpExecArray;
+  while ((match = regExp.exec(input)) !== null) {
+    spans.push([match.index, match[0].length]);
+  }
+  return spans;
 }
 
 export const referenceRegExp = new RegExp(`^(.+?)[.,]?\\s*\\(?(${year})\\)?\\.\\s*(.+?)\\.`);
@@ -79,12 +70,37 @@ TODO: handle multiple matches somehow.
 */
 export function linkCites(cites: types.AuthorYearCite[], references: types.Reference[]) {
   cites.forEach(cite => {
-    var matching_references = references.filter(reference => {
+    cite.references = references
+    .map((reference, reference_i) => ({reference, reference_i}))
+    .filter(({reference, reference_i}) => {
       return names.authorsMatch(cite.authors, reference.authors) && (cite.year == reference.year);
-    });
-    if (matching_references.length === 1) {
-      cite.reference = matching_references[0];
-    }
+    })
+    .map(({reference, reference_i}) => `/references/${reference_i}`);
+  });
+}
+
+/**
+Given the text of some part of a paper, extract the `Cite`s using regular expressions.
+*/
+export function findCites(input: string, pointer: string): types.AuthorYearCite[] {
+  return matchSpans(input, citeRegExp).map(([offset, length]) => {
+    var text = input.slice(offset, offset + length);
+    var year_match = text.match(yearRegExp);
+    // we cull it down to just the names by removing parentheses, commas,
+    // and years (with optional suffixes), and trimming any extra whitespace
+    var names_string = text.replace(citeCleanRegExp, '').trim();
+    return {
+      style: types.CiteStyle.Textual,
+      text,
+      origin: {
+        pointer,
+        offset,
+        length,
+      },
+      authors: names.parseNames(names_string),
+      year: year_match ? year_match[0] : null,
+      references: [],
+    };
   });
 }
 
@@ -96,19 +112,23 @@ Extend the given paper with the parsed references and cites (linked or not),
 and return it.
 */
 export function linkPaper(paper: types.Paper, referencesTitleRegExp = /References?/) {
-  var body = paper.sections
-    .filter(section => !referencesTitleRegExp.test(section.title))
-    .map(section => `# ${section.title}\n${section.paragraphs.join('\n')}`)
-    .join('\n');
-  paper.references = paper.sections
+  var sections = paper.sections;
+  var body_sections = sections.filter(section => !referencesTitleRegExp.test(section.title));
+  var references = sections
     .filter(section => referencesTitleRegExp.test(section.title))
     .map(section => section.paragraphs.map(parseReference))
     .reduce((accumulator, references) => {
-      pushAll(accumulator, references);
+      accumulator.push(...references);
       return accumulator;
     }, []);
-  var cites = parseCites(body);
-  linkCites(cites, paper.references);
-  paper.cites = cites;
-  return paper;
+
+  var cites: types.AuthorYearCite[] = [];
+  body_sections.forEach((section, section_i) => {
+    section.paragraphs.forEach((paragraph, paragraph_i) => {
+      cites.push(...findCites(paragraph, `/sections/${section_i}/paragraphs/${paragraph_i}`));
+    });
+  });
+
+  linkCites(cites, references);
+  return {sections, references, cites};
 }

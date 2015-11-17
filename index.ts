@@ -1,11 +1,9 @@
-/// <reference path="../type_declarations/index.d.ts" />
-import * as fs from 'fs';
-import * as stream from 'stream';
+import {readFileSync, createWriteStream} from 'fs';
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
-import types = require('../types');
-import acl = require('../styles/acl');
+import {Paper} from './types';
+import {citeRegExp, linkPaper} from './styles/acl';
 
 function stderr(line: string) {
   process.stderr.write(chalk.magenta(line) + '\n');
@@ -13,8 +11,8 @@ function stderr(line: string) {
 
 function highlight(filename: string): string {
   stderr(`highlighting ${filename}`);
-  var paper_json = fs.readFileSync(filename, {encoding: 'utf8'});
-  var paper: types.Paper = JSON.parse(paper_json);
+  var paper_json = readFileSync(filename, {encoding: 'utf8'});
+  var paper: Paper = JSON.parse(paper_json);
 
   return paper.sections
     .map(section => `# ${section.title}\n${section.paragraphs.join('\n')}`)
@@ -24,20 +22,20 @@ function highlight(filename: string): string {
       return chalk.blue(group0).toString();
     })
     // color each cite green
-    .replace(acl.citeRegExp, group0 => {
+    .replace(citeRegExp, group0 => {
       return chalk.green(group0).toString();
     });
 }
 
-function link(filename: string): types.Paper {
-  var paper_json = fs.readFileSync(filename, {encoding: 'utf8'});
-  var paper: types.Paper = JSON.parse(paper_json);
+function link(filename: string): Paper {
+  var paper_json = readFileSync(filename, {encoding: 'utf8'});
+  var original_paper: Paper = JSON.parse(paper_json);
   // extract body and references from Paper object
-  acl.linkPaper(paper);
-  var linked_cites = paper.cites.filter(cite => cite.reference !== undefined);
+  var paper = linkPaper(original_paper);
+  var linked_cites = paper.cites.filter(cite => cite.references.length > 0);
   // report
   var report = {
-    filename: filename,
+    filename,
     references: paper.references.length,
     cites: paper.cites.length,
     linked: linked_cites.length,
@@ -104,7 +102,7 @@ export function main() {
       process.exit(1);
     }
 
-    var outputStream = (argv.output == '-') ? process.stdout : fs.createWriteStream(argv.output, {encoding: 'utf8'});
+    var outputStream = (argv.output == '-') ? process.stdout : createWriteStream(argv.output, {encoding: 'utf8'});
     outputStream.write(output + '\n');
   }
 }

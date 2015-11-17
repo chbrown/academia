@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES5"
+  },
+  "files": [
+    "node_modules/declarations/chalk/chalk.d.ts",
+    "node_modules/declarations/mocha/mocha.d.ts",
+    "node_modules/declarations/node/node.d.ts",
+    "node_modules/declarations/yargs/yargs.d.ts",
+    "styles/acl.ts",
+    "index.ts",
+    "names.ts",
+    "types.ts"
+  ]
+}

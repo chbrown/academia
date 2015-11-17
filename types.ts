@@ -4,7 +4,18 @@ Parenthetical: (Brown 2015)
 Alternate: Brown 2015
 */
 export enum CiteStyle {
-  Textual, Parenthetical, Alternate
+  Textual,
+  Parenthetical,
+  Alternate
+}
+
+export interface Origin {
+  /** the location of the string within the paper */
+  pointer: string;
+  /** the offset within the string located by `pointer` */
+  offset?: number;
+  /** the length of the citation within the string located by `pointer` */
+  length?: number;
 }
 
 /**
@@ -13,12 +24,12 @@ Cite: in-paper reference to an article listed in the Bibliography.
 export interface Cite {
   /** the style of citation */
   style: CiteStyle;
-  /** the location within the paper */
-  range?: [number, number];
-  /** the full reference it matches */
-  reference?: Reference;
-  /** the original text */
-  source?: string;
+  /** the content of the cite */
+  text: string;
+  /** the origin of the cite */
+  origin: Origin;
+  /** pointers to the reference(s) it matches */
+  references: string[];
 }
 
 export interface AuthorYearCite extends Cite {

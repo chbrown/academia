@@ -10,7 +10,10 @@
   ],
   "version": "0.3.0",
   "homepage": "https://github.com/chbrown/academia",
-  "repository": "git://github.com/chbrown/academia.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chbrown/academia.git"
+  },
   "author": "Christopher Brown <io@henrian.com> (http://henrian.com)",
   "license": "MIT",
   "dependencies": {
@@ -19,9 +22,10 @@
     "yargs": "*"
   },
   "devDependencies": {
+    "babel-core": "^5.0.0",
+    "declarations": "*",
     "mocha": "*",
-    "typescript": "*",
-    "typescript-declare": "*"
+    "typescript": "next"
   },
   "scripts": {
     "test": "make test"

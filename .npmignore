@@ -1,7 +1,7 @@
 styles/acl.ts
-tests/
 index.ts
-Makefile
 names.ts
-tsconfig.json
 types.ts
+Makefile
+tsconfig.json
+tests/

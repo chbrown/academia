@@ -1,5 +1,5 @@
 BIN := node_modules/.bin
-TYPESCRIPT := styles/acl.ts index.ts names.ts types.ts
+TYPESCRIPT := $(shell jq -r '.files[]' tsconfig.json | grep -Fv .d.ts)
 
 all: $(TYPESCRIPT:%.ts=%.js) $(TYPESCRIPT:%.ts=%.d.ts)
 

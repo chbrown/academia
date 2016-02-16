@@ -1,6 +1,7 @@
+"use strict";
 var fs_1 = require('fs');
 var chalk = require('chalk');
-var yargs = require('yargs');
+var optimist = require('optimist');
 var acl_1 = require('./styles/acl');
 function stderr(line) {
     process.stderr.write(chalk.magenta(line) + '\n');
@@ -39,12 +40,16 @@ function link(filename) {
     return paper;
 }
 function main() {
-    var argvparser = yargs
-        .usage('Usage: academia <command> <file>')
-        .command('highlight', 'highlight references in paper')
-        .example('academia highlight P14-1148.pdf.json', 'Print the Paper specified in P14-1148.pdf.json as plaintext with the references highlighted')
-        .command('link', 'detect references, citations, and link citations to references as possible')
-        .example('academia link P14-1148.pdf.json', 'Detect cites and references, link them, and print the full enhanced Paper object')
+    var argvparser = optimist
+        .usage([
+        'Usage: academia <command> <file>',
+        '',
+        'Commands:',
+        '  highlight: highlight references in paper, e.g.:',
+        '    academia highlight P14-1148.pdf.json -- Print the Paper specified in P14-1148.pdf.json as plaintext with the references highlighted',
+        '  link: detect references, citations, and link citations to references as possible, e.g.:',
+        '    academia link P14-1148.pdf.json -- Detect cites and references, link them, and print the full enhanced Paper object',
+    ].join('\n'))
         .describe({
         output: 'output file (- for STDOUT)',
         help: 'print this help message',

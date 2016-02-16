@@ -19,13 +19,13 @@
   "dependencies": {
     "chalk": "*",
     "lexing": "*",
-    "yargs": "*"
+    "optimist": "*"
   },
   "devDependencies": {
     "babel-core": "^5.0.0",
     "declarations": "*",
     "mocha": "*",
-    "typescript": "next"
+    "typescript": "*"
   },
   "scripts": {
     "test": "make test"

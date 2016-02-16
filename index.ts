@@ -1,6 +1,6 @@
 import {readFileSync, createWriteStream} from 'fs';
 import * as chalk from 'chalk';
-import * as yargs from 'yargs';
+import * as optimist from 'optimist';
 
 import {Paper} from './types';
 import {citeRegExp, linkPaper} from './styles/acl';
@@ -48,14 +48,16 @@ function link(filename: string): Paper {
 }
 
 export function main() {
-  var argvparser = yargs
-    .usage('Usage: academia <command> <file>')
-    .command('highlight', 'highlight references in paper')
-    .example('academia highlight P14-1148.pdf.json',
-      'Print the Paper specified in P14-1148.pdf.json as plaintext with the references highlighted')
-    .command('link', 'detect references, citations, and link citations to references as possible')
-    .example('academia link P14-1148.pdf.json',
-      'Detect cites and references, link them, and print the full enhanced Paper object')
+  var argvparser = optimist
+    .usage([
+      'Usage: academia <command> <file>',
+      '',
+      'Commands:',
+      '  highlight: highlight references in paper, e.g.:',
+      '    academia highlight P14-1148.pdf.json -- Print the Paper specified in P14-1148.pdf.json as plaintext with the references highlighted',
+      '  link: detect references, citations, and link citations to references as possible, e.g.:',
+      '    academia link P14-1148.pdf.json -- Detect cites and references, link them, and print the full enhanced Paper object',
+    ].join('\n'))
     .describe({
       output: 'output file (- for STDOUT)',
       help: 'print this help message',

@@ -4,7 +4,7 @@ import * as names from '../names';
 const name = '[A-Z][^()\\s]+(?: [IV]+)?';
 const year = '[0-9]{4}(?:[-–—][0-9]{4})?[a-z]?';
 
-var citeSources = [
+const citeSources = [
   // et al., duo, and single, with year in parens
   `${name}\\s+et\\s+al.\\s+\\(${year}\\)`,
   `${name}\\s+(?:and|&)\\s+${name}\\s+\\(${year}\\)`,
@@ -27,9 +27,9 @@ function matchSpans(input: string, regExp: RegExp = citeRegExp): Array<[number, 
   // reset the regex
   regExp.lastIndex = 0;
   // set up the iteration variables
-  var previousLastIndex = regExp.lastIndex;
-  var spans: Array<[number, number]> = [];
-  var match: RegExpExecArray;
+  const previousLastIndex = regExp.lastIndex;
+  const spans: Array<[number, number]> = [];
+  let match: RegExpExecArray;
   while ((match = regExp.exec(input)) !== null) {
     spans.push([match.index, match[0].length]);
   }
@@ -43,8 +43,8 @@ Given a string representing an individual reference in a bibliography, parse
 it into a Reference structure.
 */
 export function parseReference(reference: string): types.Reference {
-  var match = reference.match(referenceRegExp);
-  var authors = match ? names.parseNames(match[1]) : [];
+  const match = reference.match(referenceRegExp);
+  const authors = match ? names.parseNames(match[1]) : [];
   return {
     authors: authors,
     year: match ? match[2] : undefined,
@@ -57,8 +57,8 @@ export function parseReference(reference: string): types.Reference {
 Given a Reference, format it as a string.
 */
 export function formatReference(reference: types.Reference): string {
-  var authors = names.formatNames(reference.authors)
-  var parts = [authors, reference.year, reference.title, reference.venue, reference.publisher, reference.pages];
+  const authors = names.formatNames(reference.authors)
+  const parts = [authors, reference.year, reference.title, reference.venue, reference.publisher, reference.pages];
   return parts.filter(part => part !== undefined && part !== null).join('. ') + '.';
 }
 
@@ -84,11 +84,11 @@ Given the text of some part of a paper, extract the `Cite`s using regular expres
 */
 export function findCites(input: string, pointer: string): types.AuthorYearCite[] {
   return matchSpans(input, citeRegExp).map(([offset, length]) => {
-    var text = input.slice(offset, offset + length);
-    var year_match = text.match(yearRegExp);
+    const text = input.slice(offset, offset + length);
+    const year_match = text.match(yearRegExp);
     // we cull it down to just the names by removing parentheses, commas,
     // and years (with optional suffixes), and trimming any extra whitespace
-    var names_string = text.replace(citeCleanRegExp, '').trim();
+    const names_string = text.replace(citeCleanRegExp, '').trim();
     return {
       style: types.CiteStyle.Textual,
       text,
@@ -112,9 +112,9 @@ Extend the given paper with the parsed references and cites (linked or not),
 and return it.
 */
 export function linkPaper(paper: types.Paper, referencesTitleRegExp = /References?/) {
-  var sections = paper.sections;
-  var body_sections = sections.filter(section => !referencesTitleRegExp.test(section.title));
-  var references = sections
+  const sections = paper.sections;
+  const body_sections = sections.filter(section => !referencesTitleRegExp.test(section.title));
+  const references = sections
     .filter(section => referencesTitleRegExp.test(section.title))
     .map(section => section.paragraphs.map(parseReference))
     .reduce((accumulator, references) => {
@@ -122,7 +122,7 @@ export function linkPaper(paper: types.Paper, referencesTitleRegExp = /Reference
       return accumulator;
     }, []);
 
-  var cites: types.AuthorYearCite[] = [];
+  const cites: types.AuthorYearCite[] = [];
   body_sections.forEach((section, section_i) => {
     section.paragraphs.forEach((paragraph, paragraph_i) => {
       cites.push(...findCites(paragraph, `/sections/${section_i}/paragraphs/${paragraph_i}`));

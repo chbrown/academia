@@ -14,7 +14,7 @@ makeName(['McCallum', 'Andrew']) -> { first: 'Andrew', last: 'McCallum' }
 TODO: handle 'van', 'von', 'da', etc.
 */
 export function parseName(parts: string[]): types.Name {
-  var n = parts.length;
+  const n = parts.length;
   if (n >= 3) {
     return {
       first: parts[0],
@@ -40,17 +40,17 @@ export function formatName(name: types.Name): string {
   return [name.first, name.middle, name.last].filter(part => part !== null && part !== undefined).join(' ');
 }
 export function formatNames(names: types.Name[]): string {
-  var name_strings = names.map(formatName);
+  const name_strings = names.map(formatName);
   if (name_strings.length < 3) {
     return name_strings.join(' and ');
   }
   // use the Oxford comma
-  var parts = name_strings.slice(0, -2); // might be []
+  const parts = name_strings.slice(0, -2); // might be []
   parts.push(name_strings.slice(-2).join(', and '));
   return parts.join(', ');
 }
 
-var default_rules: RegexRule<string>[] = [
+const default_rules: RegexRule<string>[] = [
   [/^$/, match => Token('EOF') ],
   [/^\s+/, match => null ],
   [/^,/, match => Token('SEPARATOR', match[0]) ],
@@ -94,21 +94,21 @@ Example chunks:
 
 */
 export function parseNames(input: string): types.Name[] {
-  var input_iterable = new StringIterator(input);
+  const input_iterable = new StringIterator(input);
 
-  var tokenizer = new Tokenizer(default_rules);
-  var token_iterator = tokenizer.map(input_iterable);
+  const tokenizer = new Tokenizer(default_rules);
+  const token_iterator = tokenizer.map(input_iterable);
 
-  var names: types.Name[] = [];
+  const names: types.Name[] = [];
 
-  var buffer: string[] = [];
-  var buffer_swap = false;
+  let buffer: string[] = [];
+  let buffer_swap = false;
   function flush() {
     if (buffer_swap) {
       // move the first item to the last item
       buffer.push(buffer.shift());
     }
-    var name = parseName(buffer);
+    const name = parseName(buffer);
     names.push(name);
     // reset
     buffer = [];
@@ -116,7 +116,7 @@ export function parseNames(input: string): types.Name[] {
   }
 
   while (1) {
-    var token = token_iterator.next();
+    const token = token_iterator.next();
     // console.error('%s=%s', token.name, token.value);
 
     // tokens: EOF NAME INITIAL SEPARATOR CONJUNCTION
@@ -172,9 +172,9 @@ In other words, 'et al.' cannot stand in for a single author.
     authorsMatch(['Blei', 'et al.'], ['David M Blei', 'Andrew Y Ng', 'Michael I Jordan']) -> true
 */
 export function authorsMatch(citeAuthors: types.Name[], referenceAuthors: types.Name[]) {
-  for (var i = 0, l = Math.max(citeAuthors.length, referenceAuthors.length); i < l; i++) {
-    var citeAuthor = citeAuthors[i];
-    var referenceAuthor = referenceAuthors[i];
+  for (let i = 0, l = Math.max(citeAuthors.length, referenceAuthors.length); i < l; i++) {
+    const citeAuthor = citeAuthors[i];
+    const referenceAuthor = referenceAuthors[i];
     // the et al. handling has to precede the normal name-checking conditional below
     if (citeAuthor && citeAuthor.last === 'al.' && referenceAuthors.length > (i + 1)) {
       // early exit: ignore the rest of the reference authors

@@ -11,8 +11,8 @@ function stderr(line: string) {
 
 function highlight(filename: string): string {
   stderr(`highlighting ${filename}`);
-  var paper_json = readFileSync(filename, {encoding: 'utf8'});
-  var paper: Paper = JSON.parse(paper_json);
+  const paper_json = readFileSync(filename, {encoding: 'utf8'});
+  const paper: Paper = JSON.parse(paper_json);
 
   return paper.sections
     .map(section => `# ${section.title}\n${section.paragraphs.join('\n')}`)
@@ -28,13 +28,13 @@ function highlight(filename: string): string {
 }
 
 function link(filename: string): Paper {
-  var paper_json = readFileSync(filename, {encoding: 'utf8'});
-  var original_paper: Paper = JSON.parse(paper_json);
+  const paper_json = readFileSync(filename, {encoding: 'utf8'});
+  const original_paper: Paper = JSON.parse(paper_json);
   // extract body and references from Paper object
-  var paper = linkPaper(original_paper);
-  var linked_cites = paper.cites.filter(cite => cite.references.length > 0);
+  const paper = linkPaper(original_paper);
+  const linked_cites = paper.cites.filter(cite => cite.references.length > 0);
   // report
-  var report = {
+  const report = {
     filename,
     references: paper.references.length,
     cites: paper.cites.length,
@@ -48,7 +48,7 @@ function link(filename: string): Paper {
 }
 
 export function main() {
-  var argvparser = optimist
+  let argvparser = optimist
     .usage([
       'Usage: academia <command> <file>',
       '',
@@ -77,7 +77,7 @@ export function main() {
       output: '-',
     });
 
-  var argv = argvparser.argv;
+  let argv = argvparser.argv;
 
   if (argv.help) {
     argvparser.showHelp();
@@ -88,15 +88,15 @@ export function main() {
   else {
     argv = argvparser.demand(2).argv;
     // pull off positional arguments
-    var command: string = argv._[0];
-    var input_filename: string = argv._[1];
+    const command: string = argv._[0];
+    const input_filename: string = argv._[1];
     // apply command to input
-    var output: string;
+    let output: string;
     if (command === 'highlight') {
       output = highlight(input_filename);
     }
     else if (command === 'link') {
-      var paper = link(input_filename);
+      const paper = link(input_filename);
       output = JSON.stringify(paper);
     }
     else {
@@ -104,7 +104,7 @@ export function main() {
       process.exit(1);
     }
 
-    var outputStream = (argv.output == '-') ? process.stdout : createWriteStream(argv.output, {encoding: 'utf8'});
+    const outputStream = (argv.output == '-') ? process.stdout : createWriteStream(argv.output, {encoding: 'utf8'});
     outputStream.write(output + '\n');
   }
 }
